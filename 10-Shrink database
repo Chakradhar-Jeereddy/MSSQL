@@ -1,0 +1,150 @@
+Shrinking a Database
+The primary purpose of shrinking a database (or individual files) is to reclaim the space by removing unused pages
+when a file no longer need to be as large as it once was, shrinking the file may then become necessary, but as we
+will demonstrate this process is highly discouraged and is extremely poor practice in the prod database environment.
+
+intial 100MB mdf files
+after data growth 1000mb mdf files
+after purging 100mb
+
+--both transaction and datafile can be shrunk individually or collectively
+--Using DBCC SHRINKDATABASE statement we can't shrink a database to smaller then its original size.
+--However you shrink individual database files to a smaller size then their initial size by using DBCC SHRINKFILE 
+statement.
+--The size of the virtual log files whithin the log determines the possible reductions in size.
+--SHRINKING causes massive fragmentation and will just result in data file growth again next time data gets added.
+--When that happens entire system will slowdown as the file is expanded.
+
+Automatic database shrinking
+When AUTO_SHRINK database option has been set to ON, the database engine automatically shrinks databases that have
+free space. By default, it is set to OFF. Leave it as is.
+
+Database shrinking commands
+DBCC SHRINKDATABASE(ShrinkDB, 10)
+DBCC SHRINKFILE(ShrinkDB, 10)
+
+Best Practices
+--Size the database accordingly to prevent shrinking and expanding the database.
+--When unused space is created due to dropping of tables, shrinking of the database may be needed -but rarely.
+--Don't constantly shrink the databases as it will grow again
+--When you shrink a database, the indexes on tables are preserved and as shuch wil cause massive fragmentation and 
+  will have to be rebuilt.
+--Shrinking the log files may be necessary if your log has grown out of control however, shrinking the log should be 
+  rare also.
+--Regular maintenance plans should never have shrink database jobs.
+--Other issues that shrinking causes are lot of I/O, CPU usage and transactions logs gets larger as everything it
+  does is fully logged(recorder event) .
+
+Below examople Illustrate shrinking a database will
+Cause pages being moved from the front of the file to the end.
+It wil cause massive fragmentation.
+It will not reduce the size of the data file, but actually increase it.
+Shrinking a database was a futile endeavor becuase of poor planning regarding sizing of database
+
+USE MASTER
+GO
+
+CREATE DATABASE CHAKRA
+USE CHAKRA
+GO
+
+--CREATE AN INITIAL TABLE AT THE FRONT OF THE DATAFILE
+CREATE TABLE INITIAL (COL1 INT IDENTITY,COL2 CHAR(8000) 'Front')
+GO
+-- INSERT DATA INTO THE TABLE
+INSERT INTO INITIAL DEFAULT VALUES;
+GO 1500
+
+SELECT * FROM INITIAL
+
+--CHECK THE SIZE OF THE DATABASE
+SP_HELPDB [CHAKRA]
+--SIZE
+
+--CREATE THE SECOND TABLE, WHICH WILL BE CREATED AFTER INITIAL TABLE IN THE DATAFILE
+CREATE TABLE SECOND (COL1 INT IDENTITY, COL2 CHAR(8000) DEFAULT 'after');
+
+--create a clustered index on the second table
+create clustered index col1 on second (col1);
+go
+
+--INSERT DATA INTO SECOND TABLE
+INSERT INTO SECOND DEFAULT VALUES;
+GO 1500
+
+SELECT * FROM SECOND
+
+SP_HELPDB CHAKRA
+
+--DATABASE EXPANDED DUE TO INSERT OF DATA IN THE SECOND TABLE (SIZE)
+
+--CHECK THE FRAGMENTATION OF THE SECOND TABLE
+SELECT [AVG_FRAGMENTATION_IN_PERCENT] FROM SYS.DM_DB_INDEX_PHYSICAL_STATS (DB_ID (CHAKRA),
+OBJECT_ID(SECOND), 1,NULL,'LIMITED');
+
+--NOTICE THAT FRAGMENTAION OF THE CLUSTRED INDEX FOR THE SECOND TABLE IS ALMOST ZERO BEFORE THE SHRINK.
+--WE WILL NOW DROP THE INITIAL TABLE WE CREATED AND EXECUTE THE SHRINK COMMAND TO RECLAIM THE SPACE AT THE FRONT 
+OF THE DATA FILE.
+--THEN SEE WHAT HAPPENS TO THE FRAGMENTATION
+
+DROP TABLE INITIAL;
+GO
+
+SP_HELPDB CHAKRA
+--26.83MB THE DATA FILE HAS NOT SHRUNK DUE TO THE DELETION OF THE INTIAL TABLE.
+
+--SHRINK THE DATABASE
+DBCC SHRINKDATABASE (CHAKRA);
+GO
+
+--NOTICE THAT THE SPACE AFTER THE SHRINK WENT DOWN FROM 26.83 TO 15.02 mb
+SP_HELPDB CHAKRA
+
+--BUT WHAT ABOUT FRAGMENTATION AFTER SHRINKING THE DATABASE?
+--THE INDEX FRAGMENTAION DRASTICALLY INCREASED.
+--BECUASE WE HAVE SHUFFLED ALL THE DATA PAGES AND THE INDEX IS NOT IN A SORTED POSITION
+
+SELECT [AVG_FRAGMENTATION_IN_PERCENT] FROM SYS.DM_DB_INDEX_PHYSICAL_STATS (DB_ID (CHAKRA), OBJECT_ID(SECOND), 
+1,NULL,'LIMITED');
+--99.6%
+
+--WHILE THE DATABASE HAS SHRUNK AND WE HAVE RECLAIMED SPACE THE DATAFILE, WE MUST NOW FIX THE FRAGMENTED INDEX
+  OF THE TABLE BY REBUILDING THE INDEXES
+
+-- REBUILD THE CLUSTERED INDEX
+ALTER INDEX [COL1] ON SECOND REBUID
+GO
+
+--CHECKING THE INDEX FRAGMENTATION AGAIN INDICATES THAT THE FRAGMENTATION OF THE INDEX HAS BEEN RESTORED, BUT
+  NOTICE THE SIZE OF THE DATA
+--WHEN WE RUN THE SHHELPDB, THE SIZE ACTUALLY GROWN EVEN MORE THAN IT STARTED FROM
+
+SELECT [AVG_FRAGMENTATION_IN_PERCENT] FROM SYS.DM_DB_INDEX_PHYSICAL_STATS (DB_ID (CHAKRA), OBJECT_ID(SECOND), 
+1,NULL,'LIMITED');
+GO
+--0.2%
+
+SP_HELPDB CHAKRA
+--41.81mb 
+--THE DATABASE FILE HAS GROWN BECAUSE REBUILDING INDEX IS THE LOGGING EVENT.
+--USE MASTER
+--GO
+--SELECT * FROM SYS.DATABASES
+--SP_HELPDB CHAKRA
+--TRANSACTION LOG = 13888 KB
+
+
+
+
+
+
+
+
+
+
+
+   
+
+
+
+
