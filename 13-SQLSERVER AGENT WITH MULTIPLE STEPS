@@ -1,0 +1,10 @@
+Agent - Jobs - right click - New job -name(myjob) - owner(spirit) - category(DBA Maintenance) - enable
+steps - new  - stepname(db_backup) - type(transaction SQL script(T sql) - Parse
+Advance - One seccess action(go to the next step), retry(0), interval(0), on failure(quit and report failure)
+ output file - (PATH)
+  append output to the file - hit ok
+
+       new - stepname(intigrity) - type(T-sql) - parse
+Advance - one seccess action(quit and report sucess)
+       output file - (path)
+    append output to the file - hit ok
