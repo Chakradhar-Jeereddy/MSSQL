@@ -41,6 +41,7 @@ It wil cause massive fragmentation.
 It will not reduce the size of the data file, but actually increase it.
 Shrinking a database was a futile endeavor becuase of poor planning regarding sizing of database
 
+
 USE MASTER
 GO
 
