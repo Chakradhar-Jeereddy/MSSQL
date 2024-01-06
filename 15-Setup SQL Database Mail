@@ -1,0 +1,92 @@
+Steps
+1) Check configuration
+2) Enable Database Mail XPs if not enabled
+3) Create database mail profile
+4) Add the created profile to sql server agent(under alert systems)
+5) Create operators to receive the notifications
+6) Create alert
+7) Add operators to the jobs to recieve notifications
+
+--Enabling the configuration
+sp_configure  -- shows the default properties (13)
+
+--TO see advance properties set configuration from 0 to 1.
+sp_configure 'show advanced', 1
+go
+RECONFIGURE
+GO
+
+SP_CONFIGURE  -- LOOK FOR DATABASE MAIL XPS IT CONFIG AND RUN VALUE IS SET TO 0, IT IS DISABLED.
+
+--ENABLE THE DATABASE MAIL XPS
+SP_CONFIGURE 'DATABASE MAIL XPS', 1 -- CONFIGURE DATABASE MAIL
+GO
+RECONFIGURE
+GO
+
+SP_CONFIGURE
+GO
+
+--TURN OFF advance properties BY SETTING configuration from 1 to 0.
+sp_configure 'show advanced', 0
+go
+RECONFIGURE
+GO
+
+SP_CONFIGURE
+GO
+
+--Setup database mail or mail profile
+Managment - Database mail ->right click -> configure database mail
+  a) setup database mail by performing following tasks
+    create a new e-mail profile and specify its SMTP accounts
+    Sepcify profile security
+    Configure system parameters
+  b) Manage database mail accounts and profiles
+  c) View or change system parameters
+      Next
+  Profile name: SQL 
+  SMTP - add account -> Account name(SQL)
+  Outgoing mail server (SMTP)
+  Email address - group email
+  server name - smto.live.com port number 25
+   Basic authentication (email id and password)
+   windows authentication using database engine service credentials
+                      go ok - go next - set it to public - ok and close
+
+--Since the database mail works in conjunction with sql server agent
+--add the profile to the agent.
+Right click agent - properties - Alert system - Enable my profile -Mail system(Database mail), Mail profile(SQL)
+GO OK
+--Restart SQL server agent
+
+--Now right click Database Mail - Send test mail, you will receive one.
+
+--Now create operators for receiving notifications
+Right click operator -> new operator -> name -> email id -> notifications - jobs
+
+--Now go to jobs - properties - notifications -> email (operator) when job fails -> ok
+
+--Use full queries
+use msdb
+go
+select * from sysmail_server
+select * from sysmail_allitems
+select * from sysmail_sentitems
+select * from sysmail_unsentitems
+select * from sysmail_faileditems
+select * from sysmail_mailitems
+select * from sysmail_log
+go
+
+
+
+
+   
+  
+
+
+
+
+
+
