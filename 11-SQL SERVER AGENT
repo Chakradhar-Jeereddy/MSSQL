@@ -1,0 +1,60 @@
+SQL server agent uses SQL server to store job information(MSDB)
+A job is a specified series of actions that can run on a local server or on a multiple remote servers.
+Jobs can contain one or more other job steps
+SQL SERVER AGENT CAN RUN ON A JOB ON A SCHEDULE
+TO A RESPONSE OR A SPECIFIC EVENT OR MANUALLY
+YOU CAN AVOID REPETIATIVE TASKS BY AUTOMATING THOSE TAKS.
+SQL SERVER AGENT CAN RECORD THE EVENT AND NOTIFY YOU VIA EMAIL OR PAGER.
+You can set up a job using SQL agent for SSIS packages or for Analysis services
+More than on job can run on the same schedule and more than one schedule can apply to the same job.
+
+Alerts
+An alert is an automatic response to a specific event. 
+
+Operators
+The people who should receive alerts via
+email
+pager
+net send
+
+Security for SQL SERVER AGENT ADMINISTRATION
+SQL AGENT USES THE FOLLOWING MSDB DATABASE ROLES TO MANAGE SECURITY.
+SQLAgentUserRole
+SQLAgentReaderRole
+SQLAGENTOperatorRole
+
+SQL AGENT Multi server administrations
+For example using Master/Target servers to manage many jobs at once
+
+Error logs and job activity monitor.
+
+Under SQL server agent
+ Jobs (local and multi server jobs)
+ Job activity monitor
+
+ Alerts 
+ Operators
+ Proxies
+ Error logs 
+ 
+######################################################
+Creating a simple job
+Right click job -> create new job, name, owner(spirit), category(uncatogorized local/Database maintenance)
+Next - Step -> Step name, type(transact-sql or operating system (CmdEXec), run as - sql srver agent service account, put perl command
+Advanced - 
+  on success action:
+   go to next step
+   quit the job reporting sucess
+   quit the job reporting failure
+      retry attempts 0, retry interval zero
+   on failure action
+   quit the job reporting failure
+
+   operating system (CmdExec)
+   output file ...
+   
+
+
+
+
+
