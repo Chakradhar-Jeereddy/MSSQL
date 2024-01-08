@@ -1,3 +1,18 @@
+--Check all users, groups and logins in SQL server
+select name login_name, type, type_desc as account_type, is_disabled from sys.server_principals
+ where type in ('U','S','G') order by name,type_desc;
+
+--Hide all databases to users
+user master
+go
+deny view any database to public
+go
+
+--unhide all databases to public
+go
+grant view any database to public
+go
+
 Windows domain username/active directory use
     - Account that accesses servers within the domain, using windows authentication
 Windows groups - Account that accesses a windows domain via a group
