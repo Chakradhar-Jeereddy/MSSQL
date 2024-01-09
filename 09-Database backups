@@ -1,0 +1,43 @@
+Database backup strategies
+
+The planing of backup strategy
+You will have to define backup strategy based on two factors.
+-Maximum amount of data loss that can be tolerated
+  It depends pm frequency of transaction log backups.
+-Accepted time frame for database to be restored in case of disaster.
+
+The first question involves taking multiple transaction log backups
+Second question involves the use of high availabilty solutions
+
+Why backups?
+Backups are taken in order to restore database to its original state it was just before the disaster.
+To protect against the hardware failure, malicious damage, user-error and database corruption.
+
+
+Different kinds of backups
+
+Full backup - A complete page by page copy of an entire database including all the data, all the structures and all other objects stored in database.
+
+Differntial backups - Backup of data that has been changed since the last full backup.
+
+Transaction log - Backup of all committed transactions currently stored in the transaction log.
+
+Copy-only backup - User backup which is independent of regular sequence of SQL server backups.
+
+File backup - A bakcup of one or more database files or filegroups
+
+Partial backup - Contains database from some of the file groups in a database
+
+Where backup should be placed?
+Ideally, backups should be placed on their own drives onto servers saparate from production server.
+Use thrir party application to copy it to remote server on a separate site.
+We should not tolerate backups on same drive and server being used for data and log file
+
+Which databases should we backup in production?
+All including system and user defined, except tempdb.
+
+Backup retention period will be deretmined by business.
+
+Full backup - It includes whole database, part of transaction log needed to recover database using full backup.
+
+
