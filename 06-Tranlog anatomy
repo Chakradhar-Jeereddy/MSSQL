@@ -1,0 +1,67 @@
+fn_dblog is a function with begning and end LSN as input parameters to look inside the transaction log.
+We use null for both start and end LSN. 
+The following example will show how the transaction log records multiple rows of data for any activity against database.
+How a tran log backup truncate the T-file after copying commited transactions to backup files.
+
+Do not use the function in production as it is undocumented.
+
+
+--Drop database if exists
+
+exec msdb.dbo.sp_delete_database_backuphistory @database_name = 'viewlogs'
+go
+use master
+go
+alter database viewlogs set single_user with rollback immediate;
+go
+use master
+go
+drop database viewlogs;
+
+use master
+go
+create database viewlogs
+containment = none
+on primary
+(name = 'viewlogs', filename = 'D:/..../viewlogs.mdf', size = 1024kb,maxsize = unlimited, filegrowth = 1024kb)
+log on
+(name = 'viewlogs_log',filename = 'D:/..../viewlogs_log.ldf', size=51200kb,maxsize = unlimited, filegrowth = 1024kb)
+go
+
+alter database set recovery full;
+
+use viewlogs
+crate table cities(city varchar(30);
+go
+
+--view the row count for the activty shuch as create database, create table in trnsaction log
+select count(*) from fn_dblog(null, null)
+
+--Take full db backup
+backup database viewlogs to disk = 'D:\....bak';
+-- Database backup will not tuncate the transaction log.
+select count(*) from fn_dblog(null, null)
+insert into cities values('NewYork');
+go 1000
+
+select count(*) from fn_dblog(null, null)    --< 3060 rows
+
+--trnaction log backup will truncate the log
+backup log viewlogs to disk = 'D:/.....bak';
+select count(*) from fn_dblog(null, null)     --< 89 rows
+
+What are VLF blocks?
+
+use viewlogs
+dbcc loginfo    --< to check number of vlfs in transaction logfile
+sp_helpdb viewlogs
+DBname, size, owner,dbid,created,status,compatibilty_level,file infoormation(mdf, ldf)
+
+--To check logspace used
+dbcc sqlperf(logspace)
+DBname, log size, %used, status
+
+Autogrowth creates more VLFs and impacts performance.
+Reduce the frequency of auto growth kiking in.
+To solve the issue, always do pre-sizing and use autogrowth only for safety reasons.
+
