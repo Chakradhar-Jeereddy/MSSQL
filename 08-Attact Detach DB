@@ -1,0 +1,32 @@
+We use this action for moving data and log files to another drive or server.
+
+The action can be performed by GUI or T-sql
+
+Using T-SQL
+--find path of the data and log files
+sp_helpdb viewlogs
+
+--Set database in single user mode
+use master
+alter database viewlogs set single_user with rollback immediate
+go
+
+--Detach the database using SP
+use master
+GO
+exec master.dbo.sp_detach_db @dbname = 'Sales', @SkipChecks='false'
+go
+
+Copy/move files to new location
+
+--Reattach the database using the attach command
+--Note sp_attach_db command got deprecated, we will use "for attach" cluase to attach database to SQL server
+
+use master
+go
+create database sales
+on
+(Filename = 'D:/.....mdf')
+(Filename = 'D:/.....ldf')
+for attach
+go
