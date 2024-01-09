@@ -1,0 +1,125 @@
+Why the DB shrink should not be used?
+
+use master
+go
+
+create database chakra
+containtment = none
+on primary
+(Name = 'Chakra', Filename = 'D:/..../chakra.mdf', size = 10240kb, filegrowth = 10240kb)
+log on
+(Name = 'chakra_log',FILENAME='D:/..../chakra_log.ldf' size = 10240kb, filegrowth = 10%)
+go
+
+use chakra
+go
+
+--create table at front of the datafile
+create table initial(COL1 INT INDENTITY, COL2 CHAR (8000) DEFAULT 'FRONT');
+GO
+
+--Insert data into table
+insert into initial default value;
+go 1500
+
+select * from initial;
+
+sp_helpdb chakra
+--size 24 MB
+
+--Create second table, which will be created at the end of the file after initial table is created in the datafile.
+create table second (COL1 INT INDENTITY, COL2 CHAR (8000) DEFAULT 'AFTER');
+
+--Create a cluster index on the second table
+create clustered index col1 on second(col1);
+
+--insert data into second table
+insert into second default values;
+go 1500
+
+select * from second;
+
+--check database size
+sp_helpdb chakra
+
+--the size increased to 36 MB
+
+
+--Check fragmentation in the second table
+select avg_fragmentation_in_precent from sys.dm_db_index_physical_stats(DB_ID('CHAKRA'), OBJECT_ID('SECOND'),1,NULL,'LIMITED');
+
+
+--Notice that fragmentation of the clustered index for the second table is almost zero
+--Before the shrink
+
+--We will now drop the initial table we created and execute the shirnk command to reclaim the space at the front of the datafile.
+--see what happens to the fragmentation
+
+drop table initial;
+go
+
+sp_helpdb chakra
+--36 MB is the size of the database not shrunk due to deletion of the table.
+
+--Shrink the database
+DBCC SHRINKDATABASE(CHAKRA)
+
+--Notice the space after the shrink operation went down from 36 MB to 17 MB.
+
+sp_helpdb chakra
+--17 MB is the size after the DB shrink
+--What happened to the fragmentation of the database after shrink operation?
+--Index fragmentaion drastically increased to 100%.
+--Becuase we have shuffled all the data pages and the index is not in sorted position
+
+--Check the fragmentation of second table
+select avg_fragmentation_in_precent from sys.dm_db_index_physical_stats(DB_ID('CHAKRA'), OBJECT_ID('SECOND'),1,NULL,'LIMITED');
+go
+
+
+ --99.6 because of the shrink operation.
+
+ --Fix the fragment problem
+ alter index col1 on second rebuild.
+ go
+
+ --check fragmentation level
+select avg_fragmentation_in_precent from sys.dm_db_index_physical_stats(DB_ID('CHAKRA'), OBJECT_ID('SECOND'),1,NULL,'LIMITED'); <-- 0.3%
+
+--Now check DB size
+sp_helpdb chakra
+
+
+--THE DATABASE SIZE HAS GROWN TO 38.31 mb, TRAN LOG SIZE INCREASED, BECAUSE REBUILDING OF INDEX IS LOGGING EVENT.
+
+use master
+go
+select * from sys.databases
+
+
+sp_helpdb chakra
+--Transaction log = 13888 kb
+
+
+alter database chakra set single_user with rollback immediate;
+alter database chakra set restricted_user with rollback immediate;
+exec msdb.dbo.sp_delete_database_backuphistory @database_name = 'chakra'
+
+use master 
+go
+drop database chakra
+go
+sp_who kill 56
+
+
+
+
+
+
+
+
+
+
+
+
+
