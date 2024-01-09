@@ -30,3 +30,8 @@ on
 (Filename = 'D:/.....ldf')
 for attach
 go
+
+use master go
+alter database demp set multi_user with rollback immediate
+go
+sp_helpdb demo
