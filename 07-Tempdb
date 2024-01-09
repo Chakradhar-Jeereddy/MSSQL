@@ -1,0 +1,30 @@
+Don'ts
+Can't drop tempdb database
+Backups not allowed
+Can't change recovery model, it is always simple
+Can't detach the tempdb database and creation of multiple file groups is not allowed.
+
+Do's
+Place both data and logfiles on seperate disk
+Place files on fastest I/O subsystem, pre-size autogrowth of data and logs
+create multile temp files for tempdb, according to formula 1 data file per physical or virtual core, keep the sizes of the files equal.
+
+alter database tempdb modify file 
+(Name=templog, Filename='C:\.....dbf');
+go
+
+Each time we move data or logfile of tempdb, we need to restart SQL server.
+
+What is SQL server tempdb?
+It is system database automatically created when SQL server is installed and at every restart of SQL serever.
+
+Purpose of Tempdb
+It is used by SQL server and uses it as workhorse.
+For creation of global or local temporary tables
+Temporary stored procedures, table variables
+For sorting indexes when sort_in_temp clause is used in ceate index statement which off loads sorting in main data files for improving performance.
+To store multiple active result sets
+Snapshot isolation and read-committed snapshot isolation
+Very busy database and it always needs attention
+
+
