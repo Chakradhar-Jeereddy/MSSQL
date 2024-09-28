@@ -14,6 +14,7 @@ Full recovery model  - Supports transaction log backup.
                        Transaction log backup marks unused space available for overwriting.
                        Chances of data loss is low, it actually depends on the frequency of transaction log backups.
 ```
+```
 Bulck logged recovery model - It support transaction log backup.
                               The mode is used for bulk DML operations.
                               The log will not get truncated at every checkpoint.
