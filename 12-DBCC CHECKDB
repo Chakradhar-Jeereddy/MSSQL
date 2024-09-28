@@ -1,3 +1,6 @@
+TTo check transaction log file usage for each database
+dbcc sqlperf(logspace)
+
 The purpose of DBCC checkdb
 
 The primary purpose is to check both the logical and physical intergrity of all objects in the specified database.
