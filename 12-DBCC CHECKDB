@@ -1,4 +1,4 @@
-TTo check transaction log file usage for each database
+To check transaction log file usage for each database
 dbcc sqlperf(logspace)
 
 The purpose of DBCC checkdb
