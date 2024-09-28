@@ -1,5 +1,7 @@
+```
 Simple, full, bulk logged
 Recovery model determines how the transaction log size needs to managed and the possibily of transaction log backup and point in time recovery.
+```
 ```
 Simple recovery model - In this mode transaction log backup is not supported.
                         Automatic logfile truncation at every checkpoint gets enabled and releases space to the system by shrinking the log file.
